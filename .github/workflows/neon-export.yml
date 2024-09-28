@@ -2,66 +2,50 @@ name: Run Appium Script on Android Emulator
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Example of scheduling the workflow to run daily
-  workflow_dispatch:      # Allows manually triggering the workflow
+    - cron: '0 0 * * *'  # Runs the workflow daily at midnight UTC
+  workflow_dispatch:      # Allows manual trigger of the workflow
 
 jobs:
   appium-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          java-package: jdk
-          check-latest: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      - name: Install Android SDK
-        uses: android-actions/setup-android@v2
-
-      - name: Install Android Emulator and Platform Tools
+      - name: Set up Docker and Start Android Emulator
         run: |
-          sdkmanager --install "platform-tools" "emulator" "system-images;android-31;google_apis;x86_64"
-          echo "no" | avdmanager create avd --name emulator --package "system-images;android-31;google_apis;x86_64" --device "pixel_2"
-          sdkmanager --update
-
-      - name: Set up emulator in PATH
-        run: echo "${ANDROID_SDK_ROOT}/emulator" >> $GITHUB_PATH
-
-      - name: Start Android Emulator
-        run: |
-          nohup emulator @emulator -no-window -no-audio -delay-adb -gpu swiftshader_indirect &
-          adb wait-for-device
-          adb shell input keyevent 82 # Unlock screen
-        timeout-minutes: 5
+          # Pull and run the Android emulator Docker container
+          docker run --privileged -d --name android-container -e "DEVICE=pixel_2" -e "API_LEVEL=31" -e "SOFT_RENDERING=true" budtmo/docker-android-x86-11.0
+          
+          # Wait for the emulator to fully start
+          sleep 120 # Adjust the sleep time if needed to ensure the emulator is ready
 
       - name: Install APK onto Emulator
-        run: adb -s emulator-5554 install apk/myapp.apk
+        run: |
+          # Copy the APK into the Docker container and install it on the emulator
+          docker cp ./apk/myapp.apk android-container:/data/local/tmp/myapp.apk
+          docker exec android-container adb install /data/local/tmp/myapp.apk
 
       - name: Install dependencies
         run: npm install
 
-      - name: Start Appium
+      - name: Start Appium Server
         run: |
+          # Install Appium globally and start it
           npm install -g appium
           appium --log-level error --allow-cors &
 
       - name: Run Appium Test
         run: node appium-script.js
         env:
-          APK_LOCATION: ./apk/app.apk
+          APK_LOCATION: ./apk/myapp.apk
           AUTHENTICATOR_SECRET: ${{ secrets.AUTHENTICATOR_SECRET }}
           EA_EMAIL: ${{ secrets.EA_EMAIL }}
           EA_PASSWORD: ${{ secrets.EA_PASSWORD }}
 
-      - name: Shut down Emulator
-        run: adb -s emulator-5554 emu kill
+      - name: Shut down Android Emulator
+        run: |
+          # Stop and remove the Docker container after tests are complete
+          docker stop android-container
+          docker rm android-container
