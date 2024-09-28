@@ -16,7 +16,11 @@ jobs:
       - name: Set up Docker and Start Android Emulator
         run: |
           # Pull and run the Android emulator Docker container
-          docker run --privileged -d --name android-container -e "DEVICE=pixel_2" -e "API_LEVEL=31" -e "SOFT_RENDERING=true" budtmo/docker-android-x86-11.0
+          docker run --privileged -d --name android-emulator \
+            -e "DEVICE=pixel" \
+            -e "API_LEVEL=30" \
+            -e "SOFT_RENDERING=true" \
+            -p 5554:5554 -p 5555:5555 reactnativecommunity/react-native-android-emulator
           
           # Wait for the emulator to fully start
           sleep 120 # Adjust the sleep time if needed to ensure the emulator is ready
@@ -24,8 +28,8 @@ jobs:
       - name: Install APK onto Emulator
         run: |
           # Copy the APK into the Docker container and install it on the emulator
-          docker cp ./apk/myapp.apk android-container:/data/local/tmp/myapp.apk
-          docker exec android-container adb install /data/local/tmp/myapp.apk
+          docker cp ./apk/myapp.apk android-emulator:/data/local/tmp/myapp.apk
+          docker exec android-emulator adb install /data/local/tmp/myapp.apk
 
       - name: Install dependencies
         run: npm install
@@ -47,5 +51,5 @@ jobs:
       - name: Shut down Android Emulator
         run: |
           # Stop and remove the Docker container after tests are complete
-          docker stop android-container
-          docker rm android-container
+          docker stop android-emulator
+          docker rm android-emulator
