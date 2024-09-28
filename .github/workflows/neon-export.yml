@@ -15,7 +15,14 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          distribution: 'temurin' # Specify the Java distribution (e.g., 'temurin', 'adopt', 'zulu')
+          java-version: '17'       # Specify the Java version
+          java-package: jdk        # Package type (jdk or jre)
+          check-latest: false
+          server-id: github         # Server ID for Maven authentication (if needed)
+          server-username: ${{ github.actor }}
+          server-password: ${{ secrets.GITHUB_TOKEN }}
+          overwrite-settings: true  # Optional, overwrites existing Maven settings.xml
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
