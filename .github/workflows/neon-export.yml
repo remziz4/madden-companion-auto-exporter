@@ -2,8 +2,8 @@ name: Run Appium Script on Android Emulator
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch: # Allows manual trigger
+    - cron: '0 0 * * *'  # Example of scheduling the workflow to run daily
+  workflow_dispatch:      # Allows manually triggering the workflow
 
 jobs:
   appium-test:
@@ -15,14 +15,10 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin' # Specify the Java distribution (e.g., 'temurin', 'adopt', 'zulu')
-          java-version: '17'       # Specify the Java version
-          java-package: jdk        # Package type (jdk or jre)
+          distribution: 'temurin'
+          java-version: '17'
+          java-package: jdk
           check-latest: false
-          server-id: github         # Server ID for Maven authentication (if needed)
-          server-username: ${{ github.actor }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
-          overwrite-settings: true  # Optional, overwrites existing Maven settings.xml
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -32,15 +28,14 @@ jobs:
       - name: Install Android SDK
         uses: android-actions/setup-android@v2
 
-      - name: Create Android Emulator
+      - name: Install Android Emulator and Platform Tools
         run: |
-          sdkmanager --list
-          echo "y" | sdkmanager --install "system-images;android-31;google_apis;x86_64"
+          sdkmanager --install "platform-tools" "emulator" "system-images;android-31;google_apis;x86_64"
           echo "no" | avdmanager create avd --name emulator --package "system-images;android-31;google_apis;x86_64" --device "pixel_2"
-          sdkmanager --install "platform-tools" "emulator"
           sdkmanager --update
-          adb devices
-          adb start-server
+
+      - name: Set up emulator in PATH
+        run: echo "${ANDROID_SDK_ROOT}/emulator" >> $GITHUB_PATH
 
       - name: Start Android Emulator
         run: |
