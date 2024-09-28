@@ -1,0 +1,17 @@
+{
+  "name": "madden-companion-auto-export",
+  "author": "Remzi Zayid",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "otplib": "^12.0.1",
+    "webdriverio": "^9.1.1"
+  },
+  "resolutions": {
+    "strip-ansi": "6.0.0",
+    "wrap-ansi": "6.2.0"
+  }
+}
