@@ -34,17 +34,20 @@ jobs:
 
       - name: Create Android Emulator
         run: |
+          sdkmanager --list
           echo "y" | sdkmanager --install "system-images;android-31;google_apis;x86_64"
           echo "no" | avdmanager create avd --name emulator --package "system-images;android-31;google_apis;x86_64" --device "pixel_2"
+          sdkmanager --install "platform-tools" "emulator"
+          sdkmanager --update
           adb devices
           adb start-server
 
       - name: Start Android Emulator
         run: |
-          nohup emulator-headless @emulator -no-window -no-audio -delay-adb -gpu swiftshader_indirect &
+          nohup emulator @emulator -no-window -no-audio -delay-adb -gpu swiftshader_indirect &
           adb wait-for-device
           adb shell input keyevent 82 # Unlock screen
-        timeout-minutes: 3
+        timeout-minutes: 5
 
       - name: Install APK onto Emulator
         run: adb -s emulator-5554 install apk/myapp.apk
