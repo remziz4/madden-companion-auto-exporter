@@ -40,11 +40,12 @@ const scrollDown = async (driver) => {
 async function runAppiumTest() {
     const appiumSessionConfigs = {
         path: '/',
+        hostname: 'host.docker.internal',
         port: 4723,
         capabilities: {
             platformName: "Android",
             "appium:deviceName": "emulator-5554",
-            "appium:app": process.env.APK_LOCATION,
+            "appium:app": process.env.APPIUM_APK_LOCATION,
             "appium:appPackage": "com.ea.gp.madden19companionapp",
             "appium:appActivity": ".MainActivity",
             "appium:automationName": "UiAutomator2",

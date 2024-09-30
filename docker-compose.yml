@@ -1,0 +1,42 @@
+version: '3'
+services:
+  emulator:
+    image: truongsinh/android-emulator
+    environment:
+      - AVD_NAME=pixel_2
+      - API_LEVEL=31
+      - TARGET=google_apis
+      - ARCHITECTURE=x86_64
+    command: >
+      emulator @pixel_2 -no-audio -no-window -gpu off
+    ports:
+      - "5554:5554"
+      - "5555:5555"
+    privileged: true
+    volumes:
+      - /dev/kvm:/dev/kvm
+  appium:
+    image: appium/appium
+    ports:
+      - "4723:4723"
+    environment:
+      - PLATFORM_NAME=Android
+      - DEVICE_NAME=emulator-5554
+      - APP=your-app.apk
+      - DRIVER=uiautomator2
+    command: >
+      appium --session-override
+    volumes:
+      - ./madden-companion-auto-export/apk/app.apk:/app/app.apk
+    depends_on:
+      - emulator
+  exporter:
+    build: .
+    env_file:
+      - .env
+    environment:
+      APPIUM_APK_LOCATION: /Users/rzayid/Projects/opm/madden-companion-auto-export/apk/app.apk
+    volumes:
+      - ./apk/app.apk:/app/app.apk
+    depends_on:
+      - appium
